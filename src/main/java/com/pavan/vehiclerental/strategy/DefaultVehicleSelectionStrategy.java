@@ -48,7 +48,7 @@ public class DefaultVehicleSelectionStrategy implements VehicleSelectionStrategy
 
         return VehicleSelectionStrategyResponse.builder()
                 .vehicles(List.of(selectedVehicle))
-                .totalAmount(lowestPrice * ((endTime - startTime)/SLOT_INTERVAL))
+                .totalAmount(lowestPrice * ((endTime - startTime) / SLOT_INTERVAL))
                 .build();
     }
 }

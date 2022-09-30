@@ -4,7 +4,9 @@ import com.pavan.vehiclerental.commands.CommandExecutorFactory;
 import com.pavan.vehiclerental.exception.InvalidModeException;
 import com.pavan.vehiclerental.mode.FileMode;
 import com.pavan.vehiclerental.mode.InteractiveMode;
+import com.pavan.vehiclerental.service.BookingService;
 import com.pavan.vehiclerental.service.VehicleRentalService;
+import com.pavan.vehiclerental.service.VehicleService;
 import com.pavan.vehiclerental.store.BookingManager;
 import com.pavan.vehiclerental.store.BranchManager;
 import com.pavan.vehiclerental.store.SlotsManager;
@@ -37,8 +39,9 @@ public class VehiclerentalApplication {
         final VehicleSelectionStrategy vehicleSelectionStrategy = new DefaultVehicleSelectionStrategy(
                 slotsManager, vehicleManager);
 
-        final VehicleRentalService vehicleRentalService = new VehicleRentalService(branchManager, vehicleManager,
-                slotsManager, bookingManager, vehicleSelectionStrategy);
+        final VehicleService vehicleService = new VehicleService(vehicleManager, slotsManager);
+        final BookingService bookingService = new BookingService(bookingManager, slotsManager, vehicleSelectionStrategy);
+        final VehicleRentalService vehicleRentalService = new VehicleRentalService(branchManager, slotsManager, vehicleService, bookingService);
 
         final CommandExecutorFactory commandExecutorFactory = new CommandExecutorFactory(vehicleRentalService);
 

@@ -32,7 +32,7 @@ public class OnboardBranchCommandExecutor extends CommandExecutor {
         final String vehicleTypes = params.get(1);
         final List<String> vehicleTypesList = Arrays.stream(vehicleTypes.split(",")).toList();
 
-        if (vehicleRentalService.getBranchService().addBranch(branchName, vehicleTypesList)) {
+        if (vehicleRentalService.onboardBranch(branchName, vehicleTypesList)) {
             outputPrinter.printWithNewLine(TRUE);
         } else {
             outputPrinter.printWithNewLine(FALSE);

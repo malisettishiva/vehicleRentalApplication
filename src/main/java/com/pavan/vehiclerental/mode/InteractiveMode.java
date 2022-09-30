@@ -19,7 +19,7 @@ public class InteractiveMode extends Mode {
         final BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
         while (true) {
             final String input = bufferedReader.readLine();
-            if (input==null) break;
+            if (input == null) break;
             final Command command = new Command(input);
             processCommand(command);
         }

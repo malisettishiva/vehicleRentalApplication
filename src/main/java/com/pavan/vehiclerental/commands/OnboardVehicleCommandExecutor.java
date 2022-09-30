@@ -35,7 +35,7 @@ public class OnboardVehicleCommandExecutor extends CommandExecutor {
         final String vehicleId = params.get(2);
         final Integer price = Integer.parseInt(params.get(3));
 
-        if (vehicleRentalService.getVehicleService().addVehicle(branchName, vehicleType, vehicleId, Double.valueOf(price))) {
+        if (vehicleRentalService.onboardVehicle(branchName, vehicleType, vehicleId, Double.valueOf(price))) {
             outputPrinter.printWithNewLine(TRUE);
         } else {
             outputPrinter.printWithNewLine(FALSE);

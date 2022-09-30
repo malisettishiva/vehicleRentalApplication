@@ -23,11 +23,6 @@ public class VehicleRentalServiceTest {
 
     private VehicleRentalService vehicleRentalService;
 
-    final BranchManager branchManager = BranchManager.getInstance();
-    final VehicleManager vehicleManager = VehicleManager.getInstance();
-    final SlotsManager slotsManager = SlotsManager.getInstance();
-    final BookingManager bookingManager = BookingManager.getInstance();
-
     @SuppressWarnings("null")
     public static <T> T giveNull() {
         return null;
@@ -35,6 +30,11 @@ public class VehicleRentalServiceTest {
 
     @BeforeEach
     void setUp(){
+
+        final BranchManager branchManager = BranchManager.getInstance();
+        final VehicleManager vehicleManager = VehicleManager.getInstance();
+        final SlotsManager slotsManager = SlotsManager.getInstance();
+        final BookingManager bookingManager = BookingManager.getInstance();
 
         branchManager.eraseAll();
         vehicleManager.eraseAll();
@@ -44,31 +44,33 @@ public class VehicleRentalServiceTest {
         final VehicleSelectionStrategy vehicleSelectionStrategy = new DefaultVehicleSelectionStrategy(
                 slotsManager, vehicleManager);
 
-        this.vehicleRentalService = new VehicleRentalService(branchManager, vehicleManager, slotsManager,
-                bookingManager, vehicleSelectionStrategy);
+        final VehicleService vehicleService = new VehicleService(vehicleManager, slotsManager);
+        final BookingService bookingService = new BookingService(bookingManager, slotsManager, vehicleSelectionStrategy);
+        this.vehicleRentalService = new VehicleRentalService(branchManager, slotsManager,
+                vehicleService, bookingService);
     }
 
     @Test
     void testOnboardBranch(){
 
-        assertTrue(vehicleRentalService.getBranchService().addBranch("B1", List.of("CAR", "BIKE")));
+        assertTrue(vehicleRentalService.onboardBranch("B1", List.of("CAR", "BIKE")));
 
         assertThrows(NullPointerException.class, () -> {
-            vehicleRentalService.getBranchService().addBranch(giveNull(), List.of("CAR", "BIKE"));
+            vehicleRentalService.onboardBranch(giveNull(), List.of("CAR", "BIKE"));
         });
 
         assertThrows(NullPointerException.class, () -> {
-            vehicleRentalService.getBranchService().addBranch("B2", giveNull());
+            vehicleRentalService.onboardBranch("B2", giveNull());
         });
 
         // When adding a vehicle unsupported by branch
         assertThrows(VehicleTypeNotFoundException.class, () -> {
-            vehicleRentalService.getBranchService().addBranch("B2", List.of("SHIP"));
+            vehicleRentalService.onboardBranch("B2", List.of("SHIP"));
         });
 
         // When adding a branch which already exists
         assertThrows(BranchAlreadyExistsException.class, () -> {
-            vehicleRentalService.getBranchService().addBranch("B1", List.of("CAR", "VAN"));
+            vehicleRentalService.onboardBranch("B1", List.of("CAR", "VAN"));
         });
 
     }
@@ -76,200 +78,165 @@ public class VehicleRentalServiceTest {
     @Test
     void testOnboardVehicle(){
 
-        assertTrue(vehicleRentalService.getBranchService().addBranch("B1", List.of("CAR", "BIKE")));
+        assertTrue(vehicleRentalService.onboardBranch("B1", List.of("CAR", "BIKE")));
 
         assertThrows(NullPointerException.class, () -> {
-            vehicleRentalService.getVehicleService()
-                    .addVehicle(giveNull(), "CAR", "C1", 200.0);
+            vehicleRentalService.onboardVehicle(giveNull(), "CAR", "C1", 200.0);
         });
 
         assertThrows(NullPointerException.class, () -> {
-            vehicleRentalService.getVehicleService()
-                    .addVehicle("B1", giveNull(), "C1", 200.0);
+            vehicleRentalService.onboardVehicle("B1", giveNull(), "C1", 200.0);
         });
 
         assertThrows(NullPointerException.class, () -> {
-            vehicleRentalService.getVehicleService()
-                    .addVehicle("B1", "CAR", giveNull(), 200.0);
+            vehicleRentalService.onboardVehicle("B1", "CAR", giveNull(), 200.0);
         });
 
         assertThrows(NullPointerException.class, () -> {
-            vehicleRentalService.getVehicleService()
-                    .addVehicle("B1", "CAR", "C1", giveNull());
+            vehicleRentalService.onboardVehicle("B1", "CAR", "C1", giveNull());
         });
 
-        assertTrue(vehicleRentalService.getVehicleService()
-                .addVehicle("B1", "CAR", "C1", 100.0));
+        assertTrue(vehicleRentalService.onboardVehicle("B1", "CAR", "C1", 100.0));
 
         // When adding a vehicle unsupported by branch
-        assertFalse(vehicleRentalService.getVehicleService()
-                .addVehicle("B1", "VAN", "C1", 100.0));
+        assertFalse(vehicleRentalService.onboardVehicle("B1", "VAN", "C1", 100.0));
 
         // When adding a vehicle of unsupported type
         assertThrows(VehicleTypeNotFoundException.class, () -> {
-            vehicleRentalService.getVehicleService()
-                    .addVehicle("B1", "SHIP", "C1", 100.0);
+            vehicleRentalService.onboardVehicle("B1", "SHIP", "C1", 100.0);
         });
 
         // Adding a vehicle to non-existent branch
         assertThrows(BranchNotFoundException.class, () -> {
-            vehicleRentalService.getVehicleService()
-                    .addVehicle("B2", "CAR", "C1", 100.0);
+            vehicleRentalService.onboardVehicle("B2", "CAR", "C1", 100.0);
         });
 
         // Adding a vehicle which already exists
         assertThrows(VehicleAlreadyExistsException.class, () -> {
-            vehicleRentalService.getVehicleService()
-                    .addVehicle("B1", "CAR", "C1", 200.0);
+            vehicleRentalService.onboardVehicle("B1", "CAR", "C1", 200.0);
         });
 
     }
 
     @Test
     void testBookingVehicle(){
-        vehicleRentalService.getBranchService().addBranch("B1", List.of("CAR", "BIKE", "VAN"));
-        vehicleRentalService.getVehicleService().addVehicle("B1", "CAR", "V1", 500.0);
-        vehicleRentalService.getVehicleService().addVehicle("B1", "CAR", "V2", 1000.0);
-        vehicleRentalService.getVehicleService().addVehicle("B1", "BIKE", "V3", 250.0);
-        vehicleRentalService.getVehicleService().addVehicle("B1", "BIKE", "V4", 300.0);
+        vehicleRentalService.onboardBranch("B1", List.of("CAR", "BIKE", "VAN"));
+        vehicleRentalService.onboardVehicle("B1", "CAR", "V1", 500.0);
+        vehicleRentalService.onboardVehicle("B1", "CAR", "V2", 1000.0);
+        vehicleRentalService.onboardVehicle("B1", "BIKE", "V3", 250.0);
+        vehicleRentalService.onboardVehicle("B1", "BIKE", "V4", 300.0);
 
         assertThrows(NullPointerException.class, () -> {
-            vehicleRentalService.getBookingService()
-                    .bookVehicle(giveNull(), "VAN", 1, 5);
+            vehicleRentalService.bookVehicle(giveNull(), "VAN", 1, 5);
         });
 
         assertThrows(NullPointerException.class, () -> {
-            vehicleRentalService.getBookingService()
-                    .bookVehicle("B1", giveNull(), 1, 5);
+            vehicleRentalService.bookVehicle("B1", giveNull(), 1, 5);
         });
 
         assertThrows(NullPointerException.class, () -> {
-            vehicleRentalService.getBookingService()
-                    .bookVehicle("B1", "VAN", giveNull(), 5);
+            vehicleRentalService.bookVehicle("B1", "VAN", giveNull(), 5);
         });
 
         assertThrows(NullPointerException.class, () -> {
-            vehicleRentalService.getBookingService()
-                    .bookVehicle("B1", "VAN", 1, giveNull());
+            vehicleRentalService.bookVehicle("B1", "VAN", 1, giveNull());
         });
 
         assertThrows(InvalidSlotDurationException.class, () -> {
-            vehicleRentalService.getBookingService()
-                    .bookVehicle("B1", "VAN", 5, 1);
+            vehicleRentalService.bookVehicle("B1", "VAN", 5, 1);
         });
 
         assertThrows(InvalidSlotDurationException.class, () -> {
-            vehicleRentalService.getBookingService()
-                    .bookVehicle("B1", "VAN", 1, 1);
+            vehicleRentalService.bookVehicle("B1", "VAN", 1, 1);
         });
 
-        assertEquals(-1.0, vehicleRentalService.getBookingService()
-                .bookVehicle("B1", "VAN", 1, 5));
-        assertEquals(1000.0, vehicleRentalService.getBookingService()
-                .bookVehicle("B1", "CAR", 1, 3));
-        assertEquals(250.0, vehicleRentalService.getBookingService()
-                .bookVehicle("B1", "BIKE", 2, 3));
-        assertEquals(900.0, vehicleRentalService.getBookingService()
-                .bookVehicle("B1", "BIKE", 2, 5));
+        assertEquals(-1.0, vehicleRentalService.bookVehicle("B1", "VAN", 1, 5));
+        assertEquals(1000.0, vehicleRentalService.bookVehicle("B1", "CAR", 1, 3));
+        assertEquals(250.0, vehicleRentalService.bookVehicle("B1", "BIKE", 2, 3));
+        assertEquals(900.0, vehicleRentalService.bookVehicle("B1", "BIKE", 2, 5));
 
         assertThrows(BranchNotFoundException.class, () -> {
-            vehicleRentalService.getBookingService().bookVehicle("B2", "VAN", 1, 5);
+            vehicleRentalService.bookVehicle("B2", "VAN", 1, 5);
         });
 
         assertThrows(VehicleTypeNotFoundException.class, () -> {
-            vehicleRentalService.getBookingService().bookVehicle("B1", "SHIP", 1, 5);
+            vehicleRentalService.bookVehicle("B1", "SHIP", 1, 5);
         });
 
     }
 
     @Test
     void testFetchAvailableVehicles(){
-        vehicleRentalService.getBranchService().addBranch("B1", List.of("CAR", "BIKE", "VAN"));
-        vehicleRentalService.getVehicleService().addVehicle("B1", "CAR", "V1", 500.0);
-        vehicleRentalService.getVehicleService().addVehicle("B1", "CAR", "V2", 1000.0);
-        vehicleRentalService.getVehicleService().addVehicle("B1", "BIKE", "V3", 250.0);
-        vehicleRentalService.getVehicleService().addVehicle("B1", "BIKE", "V4", 300.0);
+        vehicleRentalService.onboardBranch("B1", List.of("CAR", "BIKE", "VAN"));
+        vehicleRentalService.onboardVehicle("B1", "CAR", "V1", 500.0);
+        vehicleRentalService.onboardVehicle("B1", "CAR", "V2", 1000.0);
+        vehicleRentalService.onboardVehicle("B1", "BIKE", "V3", 250.0);
+        vehicleRentalService.onboardVehicle("B1", "BIKE", "V4", 300.0);
 
         assertThrows(NullPointerException.class, ()->{
-            vehicleRentalService.getVehicleService()
-                    .getAllVehicles(giveNull(), 1, 5,
+            vehicleRentalService.getAllVehicles(giveNull(), 1, 5,
                             PageRequest.of(0, 1000, Sort.Direction.ASC, "price"),
                             VehicleStatus.AVAILABLE);
         });
 
         assertThrows(NullPointerException.class, ()->{
-            vehicleRentalService.getVehicleService()
-                    .getAllVehicles("B1", giveNull(), 5,
+            vehicleRentalService.getAllVehicles("B1", giveNull(), 5,
                             PageRequest.of(0, 1000, Sort.Direction.ASC, "price"),
                             VehicleStatus.AVAILABLE);
         });
 
         assertThrows(NullPointerException.class, ()->{
-            vehicleRentalService.getVehicleService()
-                    .getAllVehicles("B1", 1, giveNull(),
+            vehicleRentalService.getAllVehicles("B1", 1, giveNull(),
                             PageRequest.of(0, 1000, Sort.Direction.ASC, "price"),
                             VehicleStatus.AVAILABLE);
         });
 
         assertThrows(NullPointerException.class, ()->{
-            vehicleRentalService.getVehicleService()
-                    .getAllVehicles("B1", 1, 5,
+            vehicleRentalService.getAllVehicles("B1", 1, 5,
                             giveNull(),
                             VehicleStatus.AVAILABLE);
         });
 
         assertThrows(NullPointerException.class, ()->{
-            vehicleRentalService.getVehicleService()
-                    .getAllVehicles("B1", 1, 5,
+            vehicleRentalService.getAllVehicles("B1", 1, 5,
                             PageRequest.of(0, 1000, Sort.Direction.ASC, "price"),
                             giveNull());
         });
 
         assertThrows(InvalidSlotDurationException.class, () -> {
-            vehicleRentalService.getBookingService()
-                    .bookVehicle("B1", "VAN", 5, 1);
+            vehicleRentalService.bookVehicle("B1", "VAN", 5, 1);
         });
 
         assertThrows(InvalidSlotDurationException.class, () -> {
-            vehicleRentalService.getBookingService()
-                    .bookVehicle("B1", "VAN", 1, 1);
+            vehicleRentalService.bookVehicle("B1", "VAN", 1, 1);
         });
 
-        vehicleRentalService.getBookingService()
-                .bookVehicle("B1", "VAN", 1, 5);
-        vehicleRentalService.getBookingService()
-                .bookVehicle("B1", "CAR", 1, 3);
-        vehicleRentalService.getBookingService()
-                .bookVehicle("B1", "BIKE", 2, 3);
-        vehicleRentalService.getBookingService()
-                .bookVehicle("B1", "BIKE", 2, 5);
+        vehicleRentalService.bookVehicle("B1", "VAN", 1, 5);
+        vehicleRentalService.bookVehicle("B1", "CAR", 1, 3);
+        vehicleRentalService.bookVehicle("B1", "BIKE", 2, 3);
+        vehicleRentalService.bookVehicle("B1", "BIKE", 2, 5);
 
         assertThrows(InvalidSlotDurationException.class, () -> {
-            vehicleRentalService.getVehicleService()
-                    .getAllVehicles("B1", 5, 1,
+            vehicleRentalService.getAllVehicles("B1", 5, 1,
                             PageRequest.of(0, 1000, Sort.Direction.ASC, "price"),
                             VehicleStatus.AVAILABLE);
         });
 
         assertThrows(InvalidSlotDurationException.class, () -> {
-            vehicleRentalService.getVehicleService()
-                    .getAllVehicles("B1", 1, 1,
+            vehicleRentalService.getAllVehicles("B1", 1, 1,
                             PageRequest.of(0, 1000, Sort.Direction.ASC, "price"),
                             VehicleStatus.AVAILABLE);
         });
 
-        assertEquals(List.of("V2"), vehicleRentalService.getVehicleService()
-                .getAllVehicles("B1", 1, 5,
+        assertEquals(List.of("V2"), vehicleRentalService.getAllVehicles("B1", 1, 5,
                         PageRequest.of(0, 1000, Sort.Direction.ASC, "price"),
                         VehicleStatus.AVAILABLE)
                 .stream().map(Vehicle::getId).toList()
         );
 
-        vehicleRentalService.getBookingService()
-                .bookVehicle("B1", "CAR", 1, 5);
+        vehicleRentalService.bookVehicle("B1", "CAR", 1, 5);
 
-        assertEquals(new ArrayList<>(), vehicleRentalService.getVehicleService()
-                .getAllVehicles(
+        assertEquals(new ArrayList<>(), vehicleRentalService.getAllVehicles(
                         "B1", 1, 5,
                         PageRequest.of(0, 1000, Sort.Direction.ASC, "price"),
                         VehicleStatus.AVAILABLE)

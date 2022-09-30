@@ -122,7 +122,7 @@ public class SlotsManager implements StoreRepository<Slot, SlotID>, BulkDataExec
 
         final List<Slot> filteredSlots = new ArrayList<>();
         for (int i = startTime; i < endTime; i += interval) {
-            if(i+interval>endTime) break;
+            if (i + interval > endTime) break;
             final SlotID slotID = generateSlotId(branchId, vehicleType, i, i + interval);
             filteredSlots.add(findById(slotID));
         }

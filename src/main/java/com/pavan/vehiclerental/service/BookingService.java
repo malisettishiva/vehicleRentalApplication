@@ -2,15 +2,13 @@ package com.pavan.vehiclerental.service;
 
 import com.pavan.vehiclerental.enums.BookingStatus;
 import com.pavan.vehiclerental.enums.VehicleStatus;
-import com.pavan.vehiclerental.enums.VehicleType;
-import com.pavan.vehiclerental.exception.InvalidSlotDurationException;
-import com.pavan.vehiclerental.model.*;
+import com.pavan.vehiclerental.model.Booking;
+import com.pavan.vehiclerental.model.Slot;
+import com.pavan.vehiclerental.model.Vehicle;
+import com.pavan.vehiclerental.model.VehicleSelectionStrategyResponse;
 import com.pavan.vehiclerental.store.BookingManager;
-import com.pavan.vehiclerental.store.BranchManager;
 import com.pavan.vehiclerental.store.SlotsManager;
 import com.pavan.vehiclerental.strategy.VehicleSelectionStrategy;
-import com.pavan.vehiclerental.validator.RangeValidator;
-import lombok.NonNull;
 
 import java.util.List;
 import java.util.UUID;
@@ -22,32 +20,20 @@ public class BookingService {
     private final VehicleSelectionStrategy vehicleSelectionStrategy;
     private final SlotsManager slotsManager;
     private final BookingManager bookingManager;
-    private final BranchManager branchManager;
 
-    public BookingService(final VehicleSelectionStrategy vehicleSelectionStrategy,
+    public BookingService(final BookingManager bookingManager,
                           final SlotsManager slotsManager,
-                          final BookingManager bookingManager,
-                          final BranchManager branchManager) {
+                          final VehicleSelectionStrategy vehicleSelectionStrategy) {
         this.vehicleSelectionStrategy = vehicleSelectionStrategy;
         this.slotsManager = slotsManager;
         this.bookingManager = bookingManager;
-        this.branchManager = branchManager;
     }
 
-    public Double bookVehicle(@NonNull final String branchId,
-                              @NonNull final String vehicleType,
-                              @NonNull final Integer startTime,
-                              @NonNull final Integer endTime) {
-
-        if (!RangeValidator.isValid(startTime, endTime)) {
-            throw new InvalidSlotDurationException();
-        }
-
-        final Branch branch = branchManager.findById(branchId);
-        final VehicleType vehicleTypeValue = VehicleType.fromString(vehicleType);
+    public Double bookVehicle(final String branchId, final String vehicleType, final Integer startTime,
+                              final Integer endTime) {
 
         final VehicleSelectionStrategyResponse vehicleSelectionStrategyResponse = vehicleSelectionStrategy.selectVehicle(
-                branch.getId(), vehicleTypeValue.toString(), startTime, endTime, SLOT_INTERVAL);
+                branchId, vehicleType, startTime, endTime, SLOT_INTERVAL);
 
         if (vehicleSelectionStrategyResponse.getVehicles().size() == 0) return (double) -1;
         final List<Vehicle> selectedVehicles = vehicleSelectionStrategyResponse.getVehicles();
@@ -69,7 +55,7 @@ public class BookingService {
         bookingManager.save(Booking.builder()
                 .id(bookingId)
                 .vehicleIds(selectedVehicleIds)
-                .branchId(branch.getId())
+                .branchId(branchId)
                 .price(vehicleSelectionStrategyResponse.getTotalAmount())
                 .status(BookingStatus.CONFIRMED)
                 .build());

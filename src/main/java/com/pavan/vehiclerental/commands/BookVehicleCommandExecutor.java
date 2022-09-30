@@ -30,7 +30,7 @@ public class BookVehicleCommandExecutor extends CommandExecutor {
         final String vehicleType = params.get(1);
         final Integer startTime = Integer.parseInt(params.get(2));
         final Integer endTime = Integer.parseInt(params.get(3));
-        Double totalAmount = vehicleRentalService.getBookingService().bookVehicle(branchId, vehicleType, startTime, endTime);
+        Double totalAmount = vehicleRentalService.bookVehicle(branchId, vehicleType, startTime, endTime);
         outputPrinter.printWithNewLine(String.valueOf(totalAmount.intValue()));
     }
 }
