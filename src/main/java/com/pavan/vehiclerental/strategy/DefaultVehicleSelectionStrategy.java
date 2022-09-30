@@ -9,6 +9,8 @@ import com.pavan.vehiclerental.store.VehicleManager;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.pavan.vehiclerental.constants.SlotIntervalConstants.SLOT_INTERVAL;
+
 public class DefaultVehicleSelectionStrategy implements VehicleSelectionStrategy {
 
     private final VehicleManager vehicleManager;
@@ -46,7 +48,7 @@ public class DefaultVehicleSelectionStrategy implements VehicleSelectionStrategy
 
         return VehicleSelectionStrategyResponse.builder()
                 .vehicles(List.of(selectedVehicle))
-                .totalAmount(lowestPrice * (endTime - startTime))
+                .totalAmount(lowestPrice * ((endTime - startTime)/SLOT_INTERVAL))
                 .build();
     }
 }

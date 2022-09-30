@@ -10,8 +10,9 @@ import lombok.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BranchService {
+import static com.pavan.vehiclerental.constants.SlotIntervalConstants.SLOT_INTERVAL;
 
+public class BranchService {
     private final BranchManager branchManager;
     private final SlotsManager slotsManager;
 
@@ -22,12 +23,14 @@ public class BranchService {
 
     private List<Slot> generateSlots(final String branchId, final String vehicleType) {
         final List<Slot> slots = new ArrayList<>();
-        for (int i = 0; i < 24; i++) {
+        final Integer interval = SLOT_INTERVAL;
+        for (int i = 0; i < 24; i+=interval) {
+            if(i+interval>24) break;
             final Slot slot = Slot.builder()
                     .branchId(branchId)
                     .vehicleType(vehicleType)
                     .startTime(i)
-                    .endTime(i + 1)
+                    .endTime(i + interval)
                     .availableVehiclesCnt(0)
                     .vehicles(new ArrayList<>())
                     .build();
