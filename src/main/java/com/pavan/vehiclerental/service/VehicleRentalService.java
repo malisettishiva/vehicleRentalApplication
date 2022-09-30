@@ -7,7 +7,6 @@ import com.pavan.vehiclerental.model.Branch;
 import com.pavan.vehiclerental.model.Slot;
 import com.pavan.vehiclerental.model.Vehicle;
 import com.pavan.vehiclerental.store.BranchManager;
-import com.pavan.vehiclerental.store.SlotsManager;
 import com.pavan.vehiclerental.validator.RangeValidator;
 import lombok.NonNull;
 import org.springframework.data.domain.Pageable;
@@ -16,25 +15,24 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static com.pavan.vehiclerental.constants.SlotIntervalConstants.SLOT_INTERVAL;
+import static com.pavan.vehiclerental.constants.SlotIntervalConstants.*;
 
 public class VehicleRentalService {
 
-    private static final Integer DAY_START = 0;
-    private static final Integer DAY_END = 24;
-
     private final BranchManager branchManager;
-    private final SlotsManager slotsManager;
 
     private final VehicleService vehicleService;
     private final BookingService bookingService;
 
-    public VehicleRentalService(final BranchManager branchManager, final SlotsManager slotsManager,
-                                final VehicleService vehicleService, final BookingService bookingService) {
+    private final SlotsService slotsService;
+
+    public VehicleRentalService(final BranchManager branchManager,
+                                final VehicleService vehicleService, final BookingService bookingService,
+                                final SlotsService slotsService) {
         this.vehicleService = vehicleService;
         this.bookingService = bookingService;
         this.branchManager = branchManager;
-        this.slotsManager = slotsManager;
+        this.slotsService = slotsService;
     }
 
     private List<Slot> generateSlots(final String branchId, final String vehicleType) {
@@ -63,11 +61,7 @@ public class VehicleRentalService {
                 .vehicleIds(new ArrayList<>())
                 .build();
 
-        // create slots for each vehicleType
-        for (final String vehicleType : vehicleTypes) {
-            final List<Slot> slots = generateSlots(branchName, vehicleType);
-            slotsManager.saveAll(slots);
-        }
+        slotsService.onboardSlots(branchName, vehicleTypes, DAY_START, DAY_END, SLOT_INTERVAL);
 
         branchManager.save(branch);
         return true;

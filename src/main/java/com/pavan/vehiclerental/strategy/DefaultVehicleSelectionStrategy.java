@@ -3,8 +3,7 @@ package com.pavan.vehiclerental.strategy;
 import com.pavan.vehiclerental.enums.VehicleStatus;
 import com.pavan.vehiclerental.model.Vehicle;
 import com.pavan.vehiclerental.model.VehicleSelectionStrategyResponse;
-import com.pavan.vehiclerental.store.SlotsManager;
-import com.pavan.vehiclerental.store.VehicleManager;
+import com.pavan.vehiclerental.service.SlotsService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,26 +12,22 @@ import static com.pavan.vehiclerental.constants.SlotIntervalConstants.SLOT_INTER
 
 public class DefaultVehicleSelectionStrategy implements VehicleSelectionStrategy {
 
-    private final VehicleManager vehicleManager;
-    private final SlotsManager slotsManager;
+    private final SlotsService slotsService;
 
-    public DefaultVehicleSelectionStrategy(final SlotsManager slotsManager, final VehicleManager vehicleManager) {
-        this.slotsManager = slotsManager;
-        this.vehicleManager = vehicleManager;
+    public DefaultVehicleSelectionStrategy(final SlotsService slotsService) {
+        this.slotsService = slotsService;
     }
 
     @Override
     public VehicleSelectionStrategyResponse selectVehicle(final String branchId, final String vehicleType,
-                                                          final Integer startTime, final Integer endTime,
-                                                          final Integer interval) {
+                                                          final Integer startTime, final Integer endTime) {
 
-        List<String> availableVehicles = slotsManager.getAllVehicles(branchId, vehicleType,
-                startTime, endTime, interval, VehicleStatus.AVAILABLE);
+        List<Vehicle> availableVehicles = slotsService.fetchVehicles(branchId, vehicleType,
+                startTime, endTime, SLOT_INTERVAL, VehicleStatus.AVAILABLE);
 
         Double lowestPrice = Double.MAX_VALUE;
         Vehicle selectedVehicle = null;
-        for (final String vehicleId : availableVehicles) {
-            final Vehicle vehicle = vehicleManager.findById(vehicleId);
+        for (final Vehicle vehicle : availableVehicles) {
             if (lowestPrice > vehicle.getPrice()) {
                 lowestPrice = vehicle.getPrice();
                 selectedVehicle = vehicle;

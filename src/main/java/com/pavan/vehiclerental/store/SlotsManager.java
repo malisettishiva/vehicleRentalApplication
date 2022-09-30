@@ -1,12 +1,12 @@
 package com.pavan.vehiclerental.store;
 
-import com.pavan.vehiclerental.enums.VehicleStatus;
 import com.pavan.vehiclerental.exception.SlotAlreadyExistsException;
 import com.pavan.vehiclerental.exception.SlotNotFoundException;
 import com.pavan.vehiclerental.model.Slot;
-import com.pavan.vehiclerental.model.VehicleAvailability;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class SlotsManager implements StoreRepository<Slot, SlotID>, BulkDataExecutor<Slot, SlotID> {
 
@@ -115,58 +115,4 @@ public class SlotsManager implements StoreRepository<Slot, SlotID>, BulkDataExec
                 .endTime(endTime)
                 .build();
     }
-
-    public List<Slot> findAll(final String branchId, final String vehicleType,
-                              final Integer startTime, final Integer endTime,
-                              final Integer interval) {
-
-        final List<Slot> filteredSlots = new ArrayList<>();
-        for (int i = startTime; i < endTime; i += interval) {
-            if (i + interval > endTime) break;
-            final SlotID slotID = generateSlotId(branchId, vehicleType, i, i + interval);
-            filteredSlots.add(findById(slotID));
-        }
-        return filteredSlots;
-    }
-
-    public List<String> getAllVehicles(final String branchId, final String vehicleType,
-                                       final Integer startTime, final Integer endTime,
-                                       final Integer interval) {
-
-        final List<Slot> filteredSlots = findAll(branchId, vehicleType, startTime, endTime, interval);
-
-        List<String> filteredVehicles = null;
-        for (final Slot slot : filteredSlots) {
-            if (filteredVehicles == null) {
-                filteredVehicles = new ArrayList<>(
-                        slot.getVehicles().stream().map(VehicleAvailability::getId).toList());
-            } else {
-                filteredVehicles.retainAll(
-                        slot.getVehicles().stream().map(VehicleAvailability::getId).toList());
-            }
-        }
-
-        return Optional.ofNullable(filteredVehicles).orElse(new ArrayList<>());
-    }
-
-    public List<String> getAllVehicles(final String branchId, final String vehicleType,
-                                       final Integer startTime, final Integer endTime,
-                                       final Integer interval, final VehicleStatus status) {
-
-        final List<Slot> filteredSlots = findAll(branchId, vehicleType, startTime, endTime, interval);
-
-        List<String> filteredVehicles = null;
-        for (final Slot slot : filteredSlots) {
-            if (filteredVehicles == null) {
-                filteredVehicles = new ArrayList<>(
-                        VehicleAvailability.filterVehicles(slot.getVehicles(), status));
-            } else {
-                filteredVehicles.retainAll(
-                        VehicleAvailability.filterVehicles(slot.getVehicles(), status));
-            }
-        }
-
-        return Optional.ofNullable(filteredVehicles).orElse(new ArrayList<>());
-    }
-
 }

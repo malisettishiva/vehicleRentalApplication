@@ -3,6 +3,7 @@ package com.pavan.vehiclerental.service;
 import com.pavan.vehiclerental.enums.VehicleStatus;
 import com.pavan.vehiclerental.exception.*;
 import com.pavan.vehiclerental.model.Vehicle;
+import com.pavan.vehiclerental.model.VehicleSelectionStrategyResponse;
 import com.pavan.vehiclerental.store.BookingManager;
 import com.pavan.vehiclerental.store.BranchManager;
 import com.pavan.vehiclerental.store.SlotsManager;
@@ -21,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class VehicleRentalServiceTest {
 
+    private VehicleSelectionStrategy vehicleSelectionStrategy;
     private VehicleRentalService vehicleRentalService;
 
     @SuppressWarnings("null")
@@ -41,13 +43,14 @@ public class VehicleRentalServiceTest {
         slotsManager.eraseAll();
         bookingManager.eraseAll();
 
-        final VehicleSelectionStrategy vehicleSelectionStrategy = new DefaultVehicleSelectionStrategy(
-                slotsManager, vehicleManager);
+        final SlotsService slotsService = new SlotsService(slotsManager, vehicleManager);
+        final VehicleService vehicleService = new VehicleService(vehicleManager, slotsService);
 
-        final VehicleService vehicleService = new VehicleService(vehicleManager, slotsManager);
-        final BookingService bookingService = new BookingService(bookingManager, slotsManager, vehicleSelectionStrategy);
-        this.vehicleRentalService = new VehicleRentalService(branchManager, slotsManager,
-                vehicleService, bookingService);
+        this.vehicleSelectionStrategy = new DefaultVehicleSelectionStrategy(slotsService);
+
+        final BookingService bookingService = new BookingService(bookingManager, slotsService, vehicleSelectionStrategy);
+        this.vehicleRentalService = new VehicleRentalService(branchManager,
+                vehicleService, bookingService, slotsService);
     }
 
     @Test
@@ -243,5 +246,23 @@ public class VehicleRentalServiceTest {
                 .stream().map(Vehicle::getId).toList()
         );
 
+    }
+
+    @Test
+    void testVehicleSelectionStrategy(){
+        vehicleRentalService.onboardBranch("B1", List.of("CAR", "BIKE", "VAN"));
+        vehicleRentalService.onboardVehicle("B1", "CAR", "V1", 500.0);
+        vehicleRentalService.onboardVehicle("B1", "CAR", "V2", 1000.0);
+        vehicleRentalService.onboardVehicle("B1", "BIKE", "V3", 250.0);
+        vehicleRentalService.onboardVehicle("B1", "BIKE", "V4", 300.0);
+
+        vehicleSelectionStrategy.selectVehicle("B1", "CAR", 1, 5);
+
+        final VehicleSelectionStrategyResponse selectionStrategyResponse = vehicleSelectionStrategy.selectVehicle("B1", "CAR", 1, 5);
+        final List<Vehicle> selectedVehicles = selectionStrategyResponse.getVehicles();
+        final List<String> selectedVehicleIds = selectedVehicles.stream().map(Vehicle::getId).toList();
+
+        assertEquals(List.of("V1"), selectedVehicleIds);
+        assertEquals(2000.0, selectionStrategyResponse.getTotalAmount());
     }
 }
