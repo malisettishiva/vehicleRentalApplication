@@ -29,10 +29,10 @@ public class VehiclerentalApplication {
 
         final OutputPrinter outputPrinter = new OutputPrinter();
 
-        final BranchManager branchManager = new BranchManager();
-        final VehicleManager vehicleManager = new VehicleManager();
-        final SlotsManager slotsManager = new SlotsManager();
-        final BookingManager bookingManager = new BookingManager();
+        final BranchManager branchManager = BranchManager.getInstance();
+        final VehicleManager vehicleManager = VehicleManager.getInstance();
+        final SlotsManager slotsManager = SlotsManager.getInstance();
+        final BookingManager bookingManager = BookingManager.getInstance();
 
         final VehicleSelectionStrategy vehicleSelectionStrategy = new DefaultVehicleSelectionStrategy(
                 slotsManager, vehicleManager);
@@ -50,11 +50,6 @@ public class VehiclerentalApplication {
             throw new InvalidModeException();
         }
 
-        // TODO : Null pointers in params , write Unit tests for them
-        // TODO : send interval in slotsManager
-        // TODO : Singleton class for managers
-        // TODO : Test File Mode
-        // TODO : Work on vehicle Availability
     }
 
 }

@@ -1,17 +1,33 @@
 package com.pavan.vehiclerental.store;
 
+import com.pavan.vehiclerental.enums.VehicleStatus;
 import com.pavan.vehiclerental.exception.SlotAlreadyExistsException;
 import com.pavan.vehiclerental.exception.SlotNotFoundException;
 import com.pavan.vehiclerental.model.Slot;
+import com.pavan.vehiclerental.model.VehicleAvailability;
 
 import java.util.*;
 
 public class SlotsManager implements StoreRepository<Slot, SlotID>, BulkDataExecutor<Slot, SlotID> {
 
+    private static volatile SlotsManager instance = null;
+
     private final Map<SlotID, Slot> vehicleAvailabilitySlots;
 
-    public SlotsManager() {
+    private SlotsManager() {
         this.vehicleAvailabilitySlots = new HashMap<>();
+    }
+
+    public static SlotsManager getInstance() {
+        if (instance == null) {
+            synchronized (SlotsManager.class) {
+                if (instance == null) {
+                    instance = new SlotsManager();
+                }
+            }
+        }
+
+        return instance;
     }
 
     @Override
@@ -64,6 +80,11 @@ public class SlotsManager implements StoreRepository<Slot, SlotID>, BulkDataExec
     }
 
     @Override
+    public void eraseAll() {
+        this.vehicleAvailabilitySlots.clear();
+    }
+
+    @Override
     public void saveAll(List<Slot> slots) {
         for (final Slot slot : slots) {
             final SlotID slotID = generateSlotId(slot.getBranchId(), slot.getVehicleType(), slot.getStartTime(),
@@ -96,30 +117,55 @@ public class SlotsManager implements StoreRepository<Slot, SlotID>, BulkDataExec
     }
 
     public List<Slot> findAll(final String branchId, final String vehicleType,
-                              final Integer startTime, final Integer endTime) {
+                              final Integer startTime, final Integer endTime,
+                              final Integer interval) {
 
         final List<Slot> filteredSlots = new ArrayList<>();
-        for (int i = startTime; i < endTime; i++) {
+        for (int i = startTime; i < endTime; i += interval) {
             final SlotID slotID = generateSlotId(branchId, vehicleType, i, i + 1);
             filteredSlots.add(findById(slotID));
         }
         return filteredSlots;
     }
 
-    public List<String> getAllAvailableVehicles(final String branchId, final String vehicleType,
-                                                final Integer startTime, final Integer endTime) {
+    public List<String> getAllVehicles(final String branchId, final String vehicleType,
+                                       final Integer startTime, final Integer endTime,
+                                       final Integer interval) {
 
-        final List<Slot> filteredSlots = findAll(branchId, vehicleType, startTime, endTime);
+        final List<Slot> filteredSlots = findAll(branchId, vehicleType, startTime, endTime, interval);
 
-        List<String> availableVehicles = null;
+        List<String> filteredVehicles = null;
         for (final Slot slot : filteredSlots) {
-            if (availableVehicles == null) {
-                availableVehicles = new ArrayList<>(slot.getVehicleIds());
+            if (filteredVehicles == null) {
+                filteredVehicles = new ArrayList<>(
+                        slot.getVehicles().stream().map(VehicleAvailability::getId).toList());
             } else {
-                availableVehicles.retainAll(slot.getVehicleIds());
+                filteredVehicles.retainAll(
+                        slot.getVehicles().stream().map(VehicleAvailability::getId).toList());
             }
         }
 
-        return Optional.ofNullable(availableVehicles).orElse(new ArrayList<>());
+        return Optional.ofNullable(filteredVehicles).orElse(new ArrayList<>());
     }
+
+    public List<String> getAllVehicles(final String branchId, final String vehicleType,
+                                       final Integer startTime, final Integer endTime,
+                                       final Integer interval, final VehicleStatus status) {
+
+        final List<Slot> filteredSlots = findAll(branchId, vehicleType, startTime, endTime, interval);
+
+        List<String> filteredVehicles = null;
+        for (final Slot slot : filteredSlots) {
+            if (filteredVehicles == null) {
+                filteredVehicles = new ArrayList<>(
+                        VehicleAvailability.filterVehicles(slot.getVehicles(), status));
+            } else {
+                filteredVehicles.retainAll(
+                        VehicleAvailability.filterVehicles(slot.getVehicles(), status));
+            }
+        }
+
+        return Optional.ofNullable(filteredVehicles).orElse(new ArrayList<>());
+    }
+
 }

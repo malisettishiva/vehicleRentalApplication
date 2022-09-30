@@ -9,10 +9,24 @@ import java.util.List;
 import java.util.Map;
 
 public class VehicleManager implements StoreRepository<Vehicle, String> {
+
+    private static volatile VehicleManager instance = null;
+
     private final Map<String, Vehicle> vehicles;
 
-    public VehicleManager() {
+    private VehicleManager() {
         this.vehicles = new HashMap<>();
+    }
+
+    public static VehicleManager getInstance() {
+        if (instance == null) {
+            synchronized (VehicleManager.class) {
+                if (instance == null) {
+                    instance = new VehicleManager();
+                }
+            }
+        }
+        return instance;
     }
 
     @Override
@@ -55,5 +69,10 @@ public class VehicleManager implements StoreRepository<Vehicle, String> {
         }
 
         this.vehicles.remove(vehicleId);
+    }
+
+    @Override
+    public void eraseAll() {
+        this.vehicles.clear();
     }
 }

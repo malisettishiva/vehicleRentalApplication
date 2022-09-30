@@ -1,7 +1,7 @@
 package com.pavan.vehiclerental.commands;
 
-import com.pavan.vehiclerental.service.VehicleRentalService;
 import com.pavan.vehiclerental.model.Command;
+import com.pavan.vehiclerental.service.VehicleRentalService;
 import com.pavan.vehiclerental.utils.OutputPrinter;
 import com.pavan.vehiclerental.validator.IntegerValidator;
 

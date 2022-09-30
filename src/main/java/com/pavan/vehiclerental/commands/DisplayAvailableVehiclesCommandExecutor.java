@@ -1,8 +1,9 @@
 package com.pavan.vehiclerental.commands;
 
-import com.pavan.vehiclerental.service.VehicleRentalService;
+import com.pavan.vehiclerental.enums.VehicleStatus;
 import com.pavan.vehiclerental.model.Command;
 import com.pavan.vehiclerental.model.Vehicle;
+import com.pavan.vehiclerental.service.VehicleRentalService;
 import com.pavan.vehiclerental.utils.OutputPrinter;
 import com.pavan.vehiclerental.validator.IntegerValidator;
 import org.springframework.data.domain.PageRequest;
@@ -34,8 +35,8 @@ public class DisplayAvailableVehiclesCommandExecutor extends CommandExecutor {
         final Integer startTime = Integer.parseInt(params.get(1));
         final Integer endTime = Integer.parseInt(params.get(2));
 
-        final List<Vehicle> vehicles = vehicleRentalService.getVehicleService().getAllAvailableVehicles(branchId, startTime, endTime,
-                PageRequest.of(0, 1000, Sort.Direction.ASC, "price"));
+        final List<Vehicle> vehicles = vehicleRentalService.getVehicleService().getAllVehicles(branchId, startTime, endTime,
+                PageRequest.of(0, 1000, Sort.Direction.ASC, "price"), VehicleStatus.AVAILABLE);
 
         final List<String> vehicleIds = vehicles.stream().map(Vehicle::getId).toList();
         StringJoiner result = new StringJoiner(",");

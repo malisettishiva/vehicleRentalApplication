@@ -2,7 +2,6 @@ package com.pavan.vehiclerental.factory;
 
 import com.pavan.vehiclerental.enums.VehicleType;
 import com.pavan.vehiclerental.model.*;
-import com.pavan.vehiclerental.service.model.*;
 
 public class VehicleOnboardingFactory {
     public static Vehicle onboardVehicle(String vehicleId, String vehicleType, Double price) {

@@ -1,5 +1,6 @@
 package com.pavan.vehiclerental.strategy;
 
+import com.pavan.vehiclerental.enums.VehicleStatus;
 import com.pavan.vehiclerental.model.Vehicle;
 import com.pavan.vehiclerental.model.VehicleSelectionStrategyResponse;
 import com.pavan.vehiclerental.store.SlotsManager;
@@ -20,10 +21,11 @@ public class DefaultVehicleSelectionStrategy implements VehicleSelectionStrategy
 
     @Override
     public VehicleSelectionStrategyResponse selectVehicle(final String branchId, final String vehicleType,
-                                                          final Integer startTime, final Integer endTime) {
+                                                          final Integer startTime, final Integer endTime,
+                                                          final Integer interval) {
 
-        List<String> availableVehicles = slotsManager.getAllAvailableVehicles(branchId, vehicleType,
-                startTime, endTime);
+        List<String> availableVehicles = slotsManager.getAllVehicles(branchId, vehicleType,
+                startTime, endTime, interval, VehicleStatus.AVAILABLE);
 
         Double lowestPrice = Double.MAX_VALUE;
         Vehicle selectedVehicle = null;

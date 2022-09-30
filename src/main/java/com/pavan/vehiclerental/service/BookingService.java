@@ -1,16 +1,21 @@
 package com.pavan.vehiclerental.service;
 
 import com.pavan.vehiclerental.enums.BookingStatus;
+import com.pavan.vehiclerental.enums.VehicleStatus;
 import com.pavan.vehiclerental.enums.VehicleType;
+import com.pavan.vehiclerental.exception.InvalidSlotDurationException;
 import com.pavan.vehiclerental.model.*;
-import com.pavan.vehiclerental.service.model.*;
 import com.pavan.vehiclerental.store.BookingManager;
 import com.pavan.vehiclerental.store.BranchManager;
 import com.pavan.vehiclerental.store.SlotsManager;
 import com.pavan.vehiclerental.strategy.VehicleSelectionStrategy;
+import com.pavan.vehiclerental.validator.RangeValidator;
+import lombok.NonNull;
 
 import java.util.List;
 import java.util.UUID;
+
+import static com.pavan.vehiclerental.constants.SlotIntervalConstants.SLOT_INTERVAL;
 
 public class BookingService {
 
@@ -29,30 +34,42 @@ public class BookingService {
         this.branchManager = branchManager;
     }
 
-    public Double bookVehicle(final String branchId, final String vehicleType, final Integer startTime, final Integer endTime) {
-        final String bookingId = UUID.randomUUID().toString();
+    public Double bookVehicle(@NonNull final String branchId,
+                              @NonNull final String vehicleType,
+                              @NonNull final Integer startTime,
+                              @NonNull final Integer endTime) {
+
+        if (!RangeValidator.isValid(startTime, endTime)) {
+            throw new InvalidSlotDurationException();
+        }
 
         final Branch branch = branchManager.findById(branchId);
         final VehicleType vehicleTypeValue = VehicleType.fromString(vehicleType);
 
         final VehicleSelectionStrategyResponse vehicleSelectionStrategyResponse = vehicleSelectionStrategy.selectVehicle(
-                branch.getId(), vehicleTypeValue.toString(), startTime, endTime);
+                branch.getId(), vehicleTypeValue.toString(), startTime, endTime, SLOT_INTERVAL);
 
         if (vehicleSelectionStrategyResponse.getVehicles().size() == 0) return (double) -1;
         final List<Vehicle> selectedVehicles = vehicleSelectionStrategyResponse.getVehicles();
+        final List<String> selectedVehicleIds = selectedVehicles.stream().map(Vehicle::getId).toList();
 
-        final List<Slot> filteredSlots = slotsManager.findAll(branchId, vehicleType, startTime, endTime);
-        List<String> selectedVehicleIds = selectedVehicles.stream().map(Vehicle::getId).toList();
+        final List<Slot> filteredSlots = slotsManager.findAll(branchId, vehicleType, startTime, endTime, SLOT_INTERVAL);
+
         for (final Slot slot : filteredSlots) {
             slot.setAvailableVehiclesCnt(slot.getAvailableVehiclesCnt() - 1);
-            slot.getVehicleIds().removeAll(selectedVehicleIds);
+            slot.getVehicles().forEach(vehicle -> {
+                if (selectedVehicleIds.contains(vehicle.getId())) {
+                    vehicle.setStatus(VehicleStatus.BOOKED);
+                }
+            });
         }
         slotsManager.updateAll(filteredSlots);
 
+        final String bookingId = UUID.randomUUID().toString();
         bookingManager.save(Booking.builder()
                 .id(bookingId)
                 .vehicleIds(selectedVehicleIds)
-                .branchId(branchId)
+                .branchId(branch.getId())
                 .price(vehicleSelectionStrategyResponse.getTotalAmount())
                 .status(BookingStatus.CONFIRMED)
                 .build());

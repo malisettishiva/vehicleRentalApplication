@@ -8,22 +8,22 @@ public enum VehicleType {
     VAN("VAN"),
     BUS("BUS");
 
-    private String value;
+    private final String value;
 
-    VehicleType(final String value){
+    VehicleType(final String value) {
         this.value = value;
     }
 
-    private String getValue(){
-        return this.value;
-    }
-
-    public static VehicleType fromString(final String value){
-        for(final VehicleType vehicleType : VehicleType.values()){
-            if(vehicleType.value.equals(value)){
+    public static VehicleType fromString(final String value) {
+        for (final VehicleType vehicleType : VehicleType.values()) {
+            if (vehicleType.value.equals(value)) {
                 return vehicleType;
             }
         }
         throw new VehicleTypeNotFoundException();
+    }
+
+    private String getValue() {
+        return this.value;
     }
 }

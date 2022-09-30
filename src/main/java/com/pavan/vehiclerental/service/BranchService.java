@@ -29,14 +29,14 @@ public class BranchService {
                     .startTime(i)
                     .endTime(i + 1)
                     .availableVehiclesCnt(0)
-                    .vehicleIds(new ArrayList<>())
+                    .vehicles(new ArrayList<>())
                     .build();
             slots.add(slot);
         }
         return slots;
     }
 
-    public boolean addBranch(final String branchName, @NonNull final List<String> vehicleTypes) {
+    public boolean addBranch(@NonNull final String branchName, @NonNull final List<String> vehicleTypes) {
         final Branch branch = Branch.builder()
                 .id(branchName)
                 .name(branchName)

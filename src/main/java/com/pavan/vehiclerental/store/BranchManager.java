@@ -10,10 +10,23 @@ import java.util.List;
 import java.util.Map;
 
 public class BranchManager implements StoreRepository<Branch, String> {
+
+    private static volatile BranchManager instance = null;
     private final Map<String, Branch> branches;
 
-    public BranchManager() {
+    private BranchManager() {
         this.branches = new HashMap<>();
+    }
+
+    public static BranchManager getInstance() {
+        if (instance == null) {
+            synchronized (BranchManager.class) {
+                if (instance == null) {
+                    instance = new BranchManager();
+                }
+            }
+        }
+        return instance;
     }
 
     @Override
@@ -56,5 +69,10 @@ public class BranchManager implements StoreRepository<Branch, String> {
         }
 
         this.branches.remove(branchId);
+    }
+
+    @Override
+    public void eraseAll() {
+        this.branches.clear();
     }
 }

@@ -9,10 +9,24 @@ import java.util.List;
 import java.util.Map;
 
 public class BookingManager implements StoreRepository<Booking, String> {
+
+    private static volatile BookingManager instance = null;
+
     private final Map<String, Booking> bookings;
 
-    public BookingManager() {
+    private BookingManager() {
         this.bookings = new HashMap<>();
+    }
+
+    public static BookingManager getInstance() {
+        if (instance == null) {
+            synchronized (BookingManager.class) {
+                if (instance == null) {
+                    instance = new BookingManager();
+                }
+            }
+        }
+        return instance;
     }
 
     @Override
@@ -55,5 +69,10 @@ public class BookingManager implements StoreRepository<Booking, String> {
         }
 
         this.bookings.remove(bookingId);
+    }
+
+    @Override
+    public void eraseAll() {
+        this.bookings.clear();
     }
 }
