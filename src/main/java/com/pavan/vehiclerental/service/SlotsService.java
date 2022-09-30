@@ -2,11 +2,9 @@ package com.pavan.vehiclerental.service;
 
 import com.pavan.vehiclerental.enums.VehicleStatus;
 import com.pavan.vehiclerental.model.Slot;
-import com.pavan.vehiclerental.model.Vehicle;
 import com.pavan.vehiclerental.model.VehicleAvailability;
 import com.pavan.vehiclerental.store.SlotID;
 import com.pavan.vehiclerental.store.SlotsManager;
-import com.pavan.vehiclerental.store.VehicleManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,11 +13,9 @@ import java.util.Optional;
 public class SlotsService {
 
     private final SlotsManager slotsManager;
-    private final VehicleManager vehicleManager;
 
-    public SlotsService(final SlotsManager slotsManager, final VehicleManager vehicleManager) {
+    public SlotsService(final SlotsManager slotsManager) {
         this.slotsManager = slotsManager;
-        this.vehicleManager = vehicleManager;
     }
 
     private List<Slot> populateSlots(final String branchId, final String vehicleType,
@@ -88,17 +84,16 @@ public class SlotsService {
         return filteredSlots;
     }
 
-    public List<Vehicle> fetchVehicles(final String branchId, final String vehicleType,
-                                       final Integer startTime, final Integer endTime, final Integer interval,
-                                       final VehicleStatus status) {
+    public List<VehicleAvailability> fetchVehicles(final String branchId, final String vehicleType,
+                                                   final Integer startTime, final Integer endTime, final Integer interval,
+                                                   final VehicleStatus status) {
 
         final List<Slot> filteredSlots = fetchSlots(branchId, vehicleType, startTime, endTime, interval);
 
-        List<String> filteredVehicles = null;
+        List<VehicleAvailability> filteredVehicles = null;
         for (final Slot slot : filteredSlots) {
-            final List<String> vehiclesWithGivenStatus = slot.getVehicles().stream()
+            final List<VehicleAvailability> vehiclesWithGivenStatus = slot.getVehicles().stream()
                     .filter(vehicle -> isStatusMatch(vehicle, status))
-                    .map(VehicleAvailability::getId)
                     .toList();
 
             if (filteredVehicles == null) {
@@ -108,21 +103,19 @@ public class SlotsService {
             }
         }
 
-        filteredVehicles = Optional.ofNullable(filteredVehicles).orElse(new ArrayList<>());
-
-        return filteredVehicles.stream().map(vehicleManager::findById).toList();
+        return Optional.ofNullable(filteredVehicles).orElse(new ArrayList<>());
     }
 
-    public boolean addVehicleAvailability(final List<Slot> slots, final List<String> vehicleIds) {
+    public boolean addVehicleAvailability(final Slot slot, final List<VehicleAvailability> vehicleAvailabilities) {
+        slot.getVehicles().addAll(vehicleAvailabilities);
+        slotsManager.update(slot);
+        return true;
+    }
 
-        final List<VehicleAvailability> newVehicles = vehicleIds.stream()
-                .map(vehicleId -> VehicleAvailability.builder()
-                        .id(vehicleId).status(VehicleStatus.AVAILABLE)
-                        .build())
-                .toList();
+    public boolean addVehicleAvailability(final List<Slot> slots, final List<VehicleAvailability> vehicleAvailabilities) {
 
         for (final Slot slot : slots) {
-            slot.getVehicles().addAll(newVehicles);
+            slot.getVehicles().addAll(vehicleAvailabilities);
         }
         slotsManager.updateAll(slots);
         return true;

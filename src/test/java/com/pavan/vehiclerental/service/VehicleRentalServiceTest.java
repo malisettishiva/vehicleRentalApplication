@@ -8,7 +8,9 @@ import com.pavan.vehiclerental.store.BookingManager;
 import com.pavan.vehiclerental.store.BranchManager;
 import com.pavan.vehiclerental.store.SlotsManager;
 import com.pavan.vehiclerental.store.VehicleManager;
+import com.pavan.vehiclerental.strategy.DefaultPricingStrategy;
 import com.pavan.vehiclerental.strategy.DefaultVehicleSelectionStrategy;
+import com.pavan.vehiclerental.strategy.PricingStrategy;
 import com.pavan.vehiclerental.strategy.VehicleSelectionStrategy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,12 +45,15 @@ public class VehicleRentalServiceTest {
         slotsManager.eraseAll();
         bookingManager.eraseAll();
 
-        final SlotsService slotsService = new SlotsService(slotsManager, vehicleManager);
+        final SlotsService slotsService = new SlotsService(slotsManager);
         final VehicleService vehicleService = new VehicleService(vehicleManager, slotsService);
 
         this.vehicleSelectionStrategy = new DefaultVehicleSelectionStrategy(slotsService);
 
-        final BookingService bookingService = new BookingService(bookingManager, slotsService, vehicleSelectionStrategy);
+        final PricingStrategy pricingStrategy = new DefaultPricingStrategy();
+        final BookingService bookingService = new BookingService(bookingManager, slotsService,
+                vehicleSelectionStrategy, pricingStrategy);
+
         this.vehicleRentalService = new VehicleRentalService(branchManager,
                 vehicleService, bookingService, slotsService);
     }
@@ -259,10 +264,8 @@ public class VehicleRentalServiceTest {
         vehicleSelectionStrategy.selectVehicle("B1", "CAR", 1, 5);
 
         final VehicleSelectionStrategyResponse selectionStrategyResponse = vehicleSelectionStrategy.selectVehicle("B1", "CAR", 1, 5);
-        final List<Vehicle> selectedVehicles = selectionStrategyResponse.getVehicles();
-        final List<String> selectedVehicleIds = selectedVehicles.stream().map(Vehicle::getId).toList();
+        final List<String> selectedVehicleIds = selectionStrategyResponse.getSelectedVehicles();
 
         assertEquals(List.of("V1"), selectedVehicleIds);
-        assertEquals(2000.0, selectionStrategyResponse.getTotalAmount());
     }
 }

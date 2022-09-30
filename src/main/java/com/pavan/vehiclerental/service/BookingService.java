@@ -2,11 +2,9 @@ package com.pavan.vehiclerental.service;
 
 import com.pavan.vehiclerental.enums.BookingStatus;
 import com.pavan.vehiclerental.enums.VehicleStatus;
-import com.pavan.vehiclerental.model.Booking;
-import com.pavan.vehiclerental.model.Slot;
-import com.pavan.vehiclerental.model.Vehicle;
-import com.pavan.vehiclerental.model.VehicleSelectionStrategyResponse;
+import com.pavan.vehiclerental.model.*;
 import com.pavan.vehiclerental.store.BookingManager;
+import com.pavan.vehiclerental.strategy.PricingStrategy;
 import com.pavan.vehiclerental.strategy.VehicleSelectionStrategy;
 
 import java.util.List;
@@ -16,6 +14,7 @@ import static com.pavan.vehiclerental.constants.SlotIntervalConstants.SLOT_INTER
 
 public class BookingService {
 
+    private final PricingStrategy pricingStrategy;
     private final VehicleSelectionStrategy vehicleSelectionStrategy;
     private final BookingManager bookingManager;
 
@@ -23,10 +22,12 @@ public class BookingService {
 
     public BookingService(final BookingManager bookingManager,
                           final SlotsService slotsService,
-                          final VehicleSelectionStrategy vehicleSelectionStrategy) {
+                          final VehicleSelectionStrategy vehicleSelectionStrategy,
+                          final PricingStrategy pricingStrategy) {
         this.vehicleSelectionStrategy = vehicleSelectionStrategy;
         this.bookingManager = bookingManager;
         this.slotsService = slotsService;
+        this.pricingStrategy = pricingStrategy;
     }
 
     public Double bookVehicle(final String branchId, final String vehicleType, final Integer startTime,
@@ -35,9 +36,10 @@ public class BookingService {
         final VehicleSelectionStrategyResponse vehicleSelectionStrategyResponse = vehicleSelectionStrategy.selectVehicle(
                 branchId, vehicleType, startTime, endTime);
 
-        if (vehicleSelectionStrategyResponse.getVehicles().size() == 0) return (double) -1;
-        final List<Vehicle> selectedVehicles = vehicleSelectionStrategyResponse.getVehicles();
-        final List<String> selectedVehicleIds = selectedVehicles.stream().map(Vehicle::getId).toList();
+        if (vehicleSelectionStrategyResponse.getSelectedVehicles().size() == 0) return (double) -1;
+        final List<String> selectedVehicleIds = vehicleSelectionStrategyResponse.getSelectedVehicles();
+
+        Double bookingAmount = pricingStrategy.getPrice(vehicleSelectionStrategyResponse);
 
         final List<Slot> filteredSlots = slotsService.fetchSlots(branchId, vehicleType, startTime, endTime, SLOT_INTERVAL);
         slotsService.updateVehicleAvailability(filteredSlots, selectedVehicleIds, VehicleStatus.BOOKED);
@@ -47,7 +49,7 @@ public class BookingService {
                 .id(bookingId)
                 .vehicleIds(selectedVehicleIds)
                 .branchId(branchId)
-                .price(vehicleSelectionStrategyResponse.getTotalAmount())
+                .price(bookingAmount)
                 .status(BookingStatus.CONFIRMED)
                 .build());
 

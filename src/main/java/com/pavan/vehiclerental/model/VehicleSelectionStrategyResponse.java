@@ -12,6 +12,9 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class VehicleSelectionStrategyResponse {
-    private List<Vehicle> vehicles;
+    private List<String> selectedVehicles;
+    private Integer totalVehicles;
+    private Integer totalAvailableVehicles;
+    private Integer totalBookedVehicles;
     private Double totalAmount;
 }

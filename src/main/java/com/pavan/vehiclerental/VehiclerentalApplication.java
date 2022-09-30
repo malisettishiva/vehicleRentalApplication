@@ -12,7 +12,9 @@ import com.pavan.vehiclerental.store.BookingManager;
 import com.pavan.vehiclerental.store.BranchManager;
 import com.pavan.vehiclerental.store.SlotsManager;
 import com.pavan.vehiclerental.store.VehicleManager;
+import com.pavan.vehiclerental.strategy.DefaultPricingStrategy;
 import com.pavan.vehiclerental.strategy.DefaultVehicleSelectionStrategy;
+import com.pavan.vehiclerental.strategy.PricingStrategy;
 import com.pavan.vehiclerental.strategy.VehicleSelectionStrategy;
 import com.pavan.vehiclerental.utils.OutputPrinter;
 
@@ -37,12 +39,14 @@ public class VehiclerentalApplication {
         final SlotsManager slotsManager = SlotsManager.getInstance();
         final BookingManager bookingManager = BookingManager.getInstance();
 
-        final SlotsService slotsService = new SlotsService(slotsManager, vehicleManager);
+        final SlotsService slotsService = new SlotsService(slotsManager);
         final VehicleService vehicleService = new VehicleService(vehicleManager, slotsService);
 
+        final PricingStrategy pricingStrategy = new DefaultPricingStrategy();
         final VehicleSelectionStrategy vehicleSelectionStrategy = new DefaultVehicleSelectionStrategy(slotsService);
 
-        final BookingService bookingService = new BookingService(bookingManager, slotsService, vehicleSelectionStrategy);
+        final BookingService bookingService = new BookingService(bookingManager, slotsService,
+                vehicleSelectionStrategy, pricingStrategy);
         final VehicleRentalService vehicleRentalService = new VehicleRentalService(branchManager,
                 vehicleService, bookingService, slotsService);
 

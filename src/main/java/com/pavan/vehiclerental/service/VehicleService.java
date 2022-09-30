@@ -6,6 +6,7 @@ import com.pavan.vehiclerental.factory.VehicleOnboardingFactory;
 import com.pavan.vehiclerental.model.Branch;
 import com.pavan.vehiclerental.model.Slot;
 import com.pavan.vehiclerental.model.Vehicle;
+import com.pavan.vehiclerental.model.VehicleAvailability;
 import com.pavan.vehiclerental.store.VehicleManager;
 import com.pavan.vehiclerental.utils.Utils;
 import lombok.NonNull;
@@ -36,7 +37,11 @@ public class VehicleService {
         vehicleManager.save(vehicle);
 
         final List<Slot> filteredSlots = slotsService.fetchSlots(branchId, vehicleType, DAY_START, DAY_END, SLOT_INTERVAL);
-        slotsService.addVehicleAvailability(filteredSlots, List.of(vehicleId));
+        slotsService.addVehicleAvailability(filteredSlots, List.of(VehicleAvailability.builder()
+                .id(vehicleId)
+                .price(price)
+                .status(VehicleStatus.AVAILABLE)
+                .build()));
 
         return true;
     }
@@ -47,8 +52,10 @@ public class VehicleService {
         final List<Vehicle> result = new ArrayList<>();
         for (final VehicleType vehicleType : Optional.ofNullable(branch.getVehicleTypes()).orElse(new ArrayList<>())) {
 
-            result.addAll(slotsService.fetchVehicles(branch.getId(), vehicleType.toString(), startTime, endTime,
-                    SLOT_INTERVAL, status));
+            final List<VehicleAvailability> vehicleAvailabilities = slotsService.fetchVehicles(branch.getId(), vehicleType.toString(), startTime, endTime,
+                    SLOT_INTERVAL, status);
+
+            result.addAll(vehicleAvailabilities.stream().map(vehicle -> vehicleManager.findById(vehicle.getId())).toList());
         }
 
         return Utils.sortAndPaginateList(result, pageable).stream().toList();
