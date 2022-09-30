@@ -10,8 +10,6 @@ import java.io.InputStreamReader;
 
 public class InteractiveMode extends Mode {
 
-    private static final String EXIT = "EXIT";
-
     public InteractiveMode(CommandExecutorFactory commandExecutorFactory, OutputPrinter outputPrinter) {
         super(commandExecutorFactory, outputPrinter);
     }
@@ -21,10 +19,8 @@ public class InteractiveMode extends Mode {
         final BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
         while (true) {
             final String input = bufferedReader.readLine();
+            if (input==null) break;
             final Command command = new Command(input);
-            if (command.getCommandName().equals(EXIT)) {
-                break;
-            }
             processCommand(command);
         }
     }

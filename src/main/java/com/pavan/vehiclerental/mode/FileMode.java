@@ -9,7 +9,6 @@ import java.io.FileReader;
 import java.io.IOException;
 
 public class FileMode extends Mode {
-
     private final String fileName;
 
     public FileMode(CommandExecutorFactory commandExecutorFactory, OutputPrinter outputPrinter,
