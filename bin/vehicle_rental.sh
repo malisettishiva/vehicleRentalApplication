@@ -4,7 +4,7 @@ SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
 cd "${SCRIPT_DIR}"
 cd ..
 
-JAR_RELATIVE_PATH=target/vehiclerental-0.0.1-SNAPSHOT.jar
+JAR_RELATIVE_PATH=target/geektrust.jar
 
 if [ -z "$1" ] ; then
         java -jar $JAR_RELATIVE_PATH
