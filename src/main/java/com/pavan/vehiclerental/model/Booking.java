@@ -16,6 +16,8 @@ public class Booking {
     private String id;
     private String branchId;
     private List<String> vehicleIds;
+    private Integer startTime;
+    private Integer endTime;
     private Double price;
     private BookingStatus status;
 }

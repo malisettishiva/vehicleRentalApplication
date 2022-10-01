@@ -1,10 +1,11 @@
 package com.pavan.vehiclerental.strategy;
 
 import com.pavan.vehiclerental.enums.VehicleStatus;
-import com.pavan.vehiclerental.exception.VehicleNotAvailableException;
+import com.pavan.vehiclerental.exception.InvalidSlotDurationException;
 import com.pavan.vehiclerental.model.VehicleAvailability;
 import com.pavan.vehiclerental.model.VehicleSelectionStrategyResponse;
 import com.pavan.vehiclerental.service.SlotsService;
+import com.pavan.vehiclerental.validator.RangeValidator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,10 +25,14 @@ public class DefaultVehicleSelectionStrategy implements VehicleSelectionStrategy
     public VehicleSelectionStrategyResponse selectVehicle(final String branchId, final String vehicleType,
                                                           final Integer startTime, final Integer endTime) {
 
-        List<VehicleAvailability> availableVehicles = slotsService.fetchVehicles(branchId, vehicleType,
-                startTime, endTime, SLOT_INTERVAL, VehicleStatus.AVAILABLE);
+        if (!RangeValidator.isValid(startTime, endTime)) {
+            throw new InvalidSlotDurationException();
+        }
 
-        if(availableVehicles.size()==0){
+        List<VehicleAvailability> availableVehicles = slotsService.fetchVehicles(branchId, vehicleType,
+                startTime, endTime, VehicleStatus.AVAILABLE);
+
+        if (availableVehicles.size() == 0) {
             return VehicleSelectionStrategyResponse.builder()
                     .selectedVehicles(new ArrayList<>())
                     .totalAmount(0.0)

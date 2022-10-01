@@ -10,7 +10,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static com.pavan.vehiclerental.constants.SlotIntervalConstants.SLOT_INTERVAL;
+
 public class SlotsService {
+
+    private final static Integer interval = SLOT_INTERVAL;
 
     private final SlotsManager slotsManager;
 
@@ -19,7 +23,7 @@ public class SlotsService {
     }
 
     private List<Slot> populateSlots(final String branchId, final String vehicleType,
-                                     final Integer startTime, final Integer endTime, final Integer interval) {
+                                     final Integer startTime, final Integer endTime) {
         final List<Slot> slots = new ArrayList<>();
         for (int i = startTime; i < endTime; i += interval) {
             if (i + interval > endTime) break;
@@ -28,7 +32,6 @@ public class SlotsService {
                     .vehicleType(vehicleType)
                     .startTime(i)
                     .endTime(i + interval)
-                    .availableVehiclesCnt(0)
                     .vehicles(new ArrayList<>())
                     .build();
             slots.add(slot);
@@ -37,7 +40,7 @@ public class SlotsService {
     }
 
     private List<SlotID> populateSlotIDs(final String branchId, final String vehicleType,
-                                         final Integer startTime, final Integer endTime, final Integer interval) {
+                                         final Integer startTime, final Integer endTime) {
         final List<SlotID> slotIDS = new ArrayList<>();
         for (int i = startTime; i < endTime; i += interval) {
             if (i + interval > endTime) break;
@@ -54,18 +57,18 @@ public class SlotsService {
     }
 
     private List<Slot> populateSlots(final String branchId, final List<String> vehicleTypes,
-                                     final Integer startTime, final Integer endTime, final Integer interval) {
+                                     final Integer startTime, final Integer endTime) {
         final List<Slot> slots = new ArrayList<>();
         for (final String vehicleType : vehicleTypes) {
-            slots.addAll(populateSlots(branchId, vehicleType, startTime, endTime, interval));
+            slots.addAll(populateSlots(branchId, vehicleType, startTime, endTime));
         }
         return slots;
     }
 
     public void onboardSlots(final String branchId, final List<String> vehicleTypes,
-                             final Integer startTime, final Integer endTime, final Integer interval) {
+                             final Integer startTime, final Integer endTime) {
 
-        final List<Slot> slots = populateSlots(branchId, vehicleTypes, startTime, endTime, interval);
+        final List<Slot> slots = populateSlots(branchId, vehicleTypes, startTime, endTime);
         slotsManager.saveAll(slots);
     }
 
@@ -75,8 +78,8 @@ public class SlotsService {
     }
 
     public List<Slot> fetchSlots(final String branchId, final String vehicleType,
-                                 final Integer startTime, final Integer endTime, final Integer interval) {
-        final List<SlotID> slotIDs = populateSlotIDs(branchId, vehicleType, startTime, endTime, interval);
+                                 final Integer startTime, final Integer endTime) {
+        final List<SlotID> slotIDs = populateSlotIDs(branchId, vehicleType, startTime, endTime);
         final List<Slot> filteredSlots = new ArrayList<>();
         for (final SlotID slotID : slotIDs) {
             filteredSlots.add(slotsManager.findById(slotID));
@@ -85,11 +88,10 @@ public class SlotsService {
     }
 
     public List<VehicleAvailability> fetchVehicles(final String branchId, final String vehicleType,
-                                                   final Integer startTime, final Integer endTime, final Integer interval,
+                                                   final Integer startTime, final Integer endTime,
                                                    final VehicleStatus status) {
 
-        final List<Slot> filteredSlots = fetchSlots(branchId, vehicleType, startTime, endTime, interval);
-
+        final List<Slot> filteredSlots = fetchSlots(branchId, vehicleType, startTime, endTime);
         List<VehicleAvailability> filteredVehicles = null;
         for (final Slot slot : filteredSlots) {
             final List<VehicleAvailability> vehiclesWithGivenStatus = slot.getVehicles().stream()
@@ -107,7 +109,17 @@ public class SlotsService {
     }
 
     public boolean addVehicleAvailability(final Slot slot, final List<VehicleAvailability> vehicleAvailabilities) {
-        slot.getVehicles().addAll(vehicleAvailabilities);
+        final List<VehicleAvailability> temp = new ArrayList<>();
+        for (final VehicleAvailability vehicleAvailability : vehicleAvailabilities) {
+            final VehicleAvailability vehicleAvailability1 = VehicleAvailability.builder()
+                    .id(vehicleAvailability.getId())
+                    .price(vehicleAvailability.getPrice())
+                    .status(vehicleAvailability.getStatus())
+                    .build();
+            temp.add(vehicleAvailability1);
+        }
+        slot.getVehicles().addAll(temp);
+
         slotsManager.update(slot);
         return true;
     }
@@ -115,7 +127,17 @@ public class SlotsService {
     public boolean addVehicleAvailability(final List<Slot> slots, final List<VehicleAvailability> vehicleAvailabilities) {
 
         for (final Slot slot : slots) {
-            slot.getVehicles().addAll(vehicleAvailabilities);
+            final List<VehicleAvailability> temp = new ArrayList<>();
+            for (final VehicleAvailability vehicleAvailability : vehicleAvailabilities) {
+                final VehicleAvailability vehicleAvailability1 = VehicleAvailability.builder()
+                        .id(vehicleAvailability.getId())
+                        .price(vehicleAvailability.getPrice())
+                        .status(vehicleAvailability.getStatus())
+                        .build();
+                temp.add(vehicleAvailability1);
+            }
+
+            slot.getVehicles().addAll(temp);
         }
         slotsManager.updateAll(slots);
         return true;

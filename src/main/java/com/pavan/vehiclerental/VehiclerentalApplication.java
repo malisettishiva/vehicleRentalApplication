@@ -2,6 +2,8 @@ package com.pavan.vehiclerental;
 
 import com.pavan.vehiclerental.commands.CommandExecutorFactory;
 import com.pavan.vehiclerental.exception.InvalidModeException;
+import com.pavan.vehiclerental.factory.VehicleOnboardingFactory;
+import com.pavan.vehiclerental.factory.VehicleOnboardingFactoryFactoryImpl;
 import com.pavan.vehiclerental.mode.FileMode;
 import com.pavan.vehiclerental.mode.InteractiveMode;
 import com.pavan.vehiclerental.service.BookingService;
@@ -39,8 +41,9 @@ public class VehiclerentalApplication {
         final SlotsManager slotsManager = SlotsManager.getInstance();
         final BookingManager bookingManager = BookingManager.getInstance();
 
+        final VehicleOnboardingFactory vehicleOnboardingFactory = new VehicleOnboardingFactoryFactoryImpl();
         final SlotsService slotsService = new SlotsService(slotsManager);
-        final VehicleService vehicleService = new VehicleService(vehicleManager, slotsService);
+        final VehicleService vehicleService = new VehicleService(vehicleManager, slotsService, vehicleOnboardingFactory);
 
         final PricingStrategy pricingStrategy = new DefaultPricingStrategy();
         final VehicleSelectionStrategy vehicleSelectionStrategy = new DefaultVehicleSelectionStrategy(slotsService);

@@ -4,7 +4,6 @@ import com.pavan.vehiclerental.enums.VehicleStatus;
 import com.pavan.vehiclerental.enums.VehicleType;
 import com.pavan.vehiclerental.exception.InvalidSlotDurationException;
 import com.pavan.vehiclerental.model.Branch;
-import com.pavan.vehiclerental.model.Slot;
 import com.pavan.vehiclerental.model.Vehicle;
 import com.pavan.vehiclerental.store.BranchManager;
 import com.pavan.vehiclerental.validator.RangeValidator;
@@ -15,7 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static com.pavan.vehiclerental.constants.SlotIntervalConstants.*;
+import static com.pavan.vehiclerental.constants.SlotIntervalConstants.DAY_END;
+import static com.pavan.vehiclerental.constants.SlotIntervalConstants.DAY_START;
 
 public class VehicleRentalService {
 
@@ -35,24 +35,6 @@ public class VehicleRentalService {
         this.slotsService = slotsService;
     }
 
-    private List<Slot> generateSlots(final String branchId, final String vehicleType) {
-        final List<Slot> slots = new ArrayList<>();
-        final int interval = SLOT_INTERVAL;
-        for (int i = DAY_START; i < DAY_END; i += interval) {
-            if (i + interval > DAY_END) break;
-            final Slot slot = Slot.builder()
-                    .branchId(branchId)
-                    .vehicleType(vehicleType)
-                    .startTime(i)
-                    .endTime(i + interval)
-                    .availableVehiclesCnt(0)
-                    .vehicles(new ArrayList<>())
-                    .build();
-            slots.add(slot);
-        }
-        return slots;
-    }
-
     public boolean onboardBranch(@NonNull final String branchName, @NonNull final List<String> vehicleTypes) {
         final Branch branch = Branch.builder()
                 .id(branchName)
@@ -61,7 +43,7 @@ public class VehicleRentalService {
                 .vehicleIds(new ArrayList<>())
                 .build();
 
-        slotsService.onboardSlots(branchName, vehicleTypes, DAY_START, DAY_END, SLOT_INTERVAL);
+        slotsService.onboardSlots(branchName, vehicleTypes, DAY_START, DAY_END);
 
         branchManager.save(branch);
         return true;

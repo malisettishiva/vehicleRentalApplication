@@ -16,32 +16,39 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static com.pavan.vehiclerental.constants.SlotIntervalConstants.*;
+import static com.pavan.vehiclerental.constants.SlotIntervalConstants.DAY_END;
+import static com.pavan.vehiclerental.constants.SlotIntervalConstants.DAY_START;
 
 public class VehicleService {
+
+    private final VehicleOnboardingFactory vehicleOnboardingFactory;
     private final VehicleManager vehicleManager;
 
     private final SlotsService slotsService;
 
     public VehicleService(final VehicleManager vehicleManager,
-                          final SlotsService slotsService) {
+                          final SlotsService slotsService,
+                          final VehicleOnboardingFactory vehicleOnboardingFactory) {
         this.vehicleManager = vehicleManager;
         this.slotsService = slotsService;
+        this.vehicleOnboardingFactory = vehicleOnboardingFactory;
     }
 
     public boolean addVehicle(@NonNull final String branchId, @NonNull final String vehicleType,
                               @NonNull final String vehicleId, @NonNull final Double price) {
 
-        Vehicle vehicle = VehicleOnboardingFactory.onboardVehicle(vehicleId, vehicleType, price);
+        Vehicle vehicle = vehicleOnboardingFactory.createInstance(vehicleId, vehicleType, price);
         if (vehicle == null) return false;
         vehicleManager.save(vehicle);
 
-        final List<Slot> filteredSlots = slotsService.fetchSlots(branchId, vehicleType, DAY_START, DAY_END, SLOT_INTERVAL);
-        slotsService.addVehicleAvailability(filteredSlots, List.of(VehicleAvailability.builder()
+        final List<Slot> filteredSlots = slotsService.fetchSlots(branchId, vehicleType, DAY_START, DAY_END);
+        final List<VehicleAvailability> vehicleAvailabilities = new ArrayList<>();
+        vehicleAvailabilities.add(VehicleAvailability.builder()
                 .id(vehicleId)
                 .price(price)
                 .status(VehicleStatus.AVAILABLE)
-                .build()));
+                .build());
+        slotsService.addVehicleAvailability(filteredSlots, vehicleAvailabilities);
 
         return true;
     }
@@ -52,8 +59,8 @@ public class VehicleService {
         final List<Vehicle> result = new ArrayList<>();
         for (final VehicleType vehicleType : Optional.ofNullable(branch.getVehicleTypes()).orElse(new ArrayList<>())) {
 
-            final List<VehicleAvailability> vehicleAvailabilities = slotsService.fetchVehicles(branch.getId(), vehicleType.toString(), startTime, endTime,
-                    SLOT_INTERVAL, status);
+            final List<VehicleAvailability> vehicleAvailabilities = slotsService.fetchVehicles(branch.getId(),
+                    vehicleType.toString(), startTime, endTime, status);
 
             result.addAll(vehicleAvailabilities.stream().map(vehicle -> vehicleManager.findById(vehicle.getId())).toList());
         }

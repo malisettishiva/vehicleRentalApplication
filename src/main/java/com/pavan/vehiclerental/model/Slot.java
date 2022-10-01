@@ -16,6 +16,5 @@ public class Slot {
     private String vehicleType;
     private Integer startTime;
     private Integer endTime;
-    private Integer availableVehiclesCnt;
     private List<VehicleAvailability> vehicles;
 }
