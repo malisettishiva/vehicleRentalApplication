@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.pavan.vehiclerental.constants.SlotIntervalConstants.DAY_END;
 import static com.pavan.vehiclerental.constants.SlotIntervalConstants.DAY_START;
@@ -62,9 +63,9 @@ public class VehicleService {
             final List<VehicleAvailability> vehicleAvailabilities = slotsService.fetchVehicles(branch.getId(),
                     vehicleType.toString(), startTime, endTime, status);
 
-            result.addAll(vehicleAvailabilities.stream().map(vehicle -> vehicleManager.findById(vehicle.getId())).toList());
+            result.addAll(vehicleAvailabilities.stream().map(vehicle -> vehicleManager.findById(vehicle.getId())).collect(Collectors.toList()));
         }
 
-        return Utils.sortAndPaginateList(result, pageable).stream().toList();
+        return Utils.sortAndPaginateList(result, pageable).stream().collect(Collectors.toList());
     }
 }

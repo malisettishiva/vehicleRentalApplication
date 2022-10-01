@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.pavan.vehiclerental.constants.SlotIntervalConstants.DAY_END;
 import static com.pavan.vehiclerental.constants.SlotIntervalConstants.DAY_START;
@@ -39,7 +40,7 @@ public class VehicleRentalService {
         final Branch branch = Branch.builder()
                 .id(branchName)
                 .name(branchName)
-                .vehicleTypes(vehicleTypes.stream().map(VehicleType::fromString).toList())
+                .vehicleTypes(vehicleTypes.stream().map(VehicleType::fromString).collect(Collectors.toList()))
                 .vehicleIds(new ArrayList<>())
                 .build();
 

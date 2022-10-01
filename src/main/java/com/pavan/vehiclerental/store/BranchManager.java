@@ -8,6 +8,7 @@ import lombok.NonNull;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class BranchManager implements StoreRepository<Branch, String> {
 
@@ -31,7 +32,7 @@ public class BranchManager implements StoreRepository<Branch, String> {
 
     @Override
     public List<Branch> findAll() {
-        return this.branches.values().stream().toList();
+        return this.branches.values().stream().collect(Collectors.toList());
     }
 
     @Override

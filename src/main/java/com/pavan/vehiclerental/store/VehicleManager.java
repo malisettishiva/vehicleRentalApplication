@@ -7,6 +7,7 @@ import com.pavan.vehiclerental.model.Vehicle;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class VehicleManager implements StoreRepository<Vehicle, String> {
 
@@ -31,7 +32,7 @@ public class VehicleManager implements StoreRepository<Vehicle, String> {
 
     @Override
     public List<Vehicle> findAll() {
-        return this.vehicles.values().stream().toList();
+        return this.vehicles.values().stream().collect(Collectors.toList());
     }
 
     @Override

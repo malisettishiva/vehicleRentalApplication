@@ -6,6 +6,7 @@ import com.pavan.vehiclerental.utils.OutputPrinter;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.pavan.vehiclerental.constants.BooleanConstants.FALSE;
 import static com.pavan.vehiclerental.constants.BooleanConstants.TRUE;
@@ -30,7 +31,7 @@ public class OnboardBranchCommandExecutor extends CommandExecutor {
         final List<String> params = command.getParams();
         final String branchName = params.get(0);
         final String vehicleTypes = params.get(1);
-        final List<String> vehicleTypesList = Arrays.stream(vehicleTypes.split(",")).toList();
+        final List<String> vehicleTypesList = Arrays.stream(vehicleTypes.split(",")).collect(Collectors.toList());
 
         if (vehicleRentalService.onboardBranch(branchName, vehicleTypesList)) {
             outputPrinter.printWithNewLine(TRUE);

@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Data
 public class Command {
@@ -15,7 +16,7 @@ public class Command {
     public Command(String input) {
         List<String> values = new java.util.ArrayList<>(Arrays.stream(input.trim().split(SPACE))
                 .map(String::trim)
-                .filter(value -> (value.length() > 0)).toList());
+                .filter(value -> (value.length() > 0)).collect(Collectors.toList()));
 
         if (values.size() == 0) throw new InvalidCommandException();
         this.commandName = values.get(0);

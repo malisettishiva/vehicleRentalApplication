@@ -7,6 +7,7 @@ import com.pavan.vehiclerental.model.Slot;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class SlotsManager implements StoreRepository<Slot, SlotID>, BulkDataExecutor<Slot, SlotID> {
 
@@ -32,7 +33,7 @@ public class SlotsManager implements StoreRepository<Slot, SlotID>, BulkDataExec
 
     @Override
     public List<Slot> findAll() {
-        return this.vehicleAvailabilitySlots.values().stream().toList();
+        return this.vehicleAvailabilitySlots.values().stream().collect(Collectors.toList());
     }
 
     @Override

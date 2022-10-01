@@ -27,6 +27,7 @@ import org.springframework.data.domain.Sort;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -248,7 +249,7 @@ class VehiclerentalApplicationTests {
         assertEquals(List.of("V2"), vehicleRentalService.getAllVehicles("B1", 1, 5,
                         PageRequest.of(0, 1000, Sort.Direction.ASC, "price"),
                         VehicleStatus.AVAILABLE)
-                .stream().map(Vehicle::getId).toList()
+                .stream().map(Vehicle::getId).collect(Collectors.toList())
         );
 
         vehicleRentalService.bookVehicle("B1", "CAR", 1, 5);
@@ -257,7 +258,7 @@ class VehiclerentalApplicationTests {
                         "B1", 1, 5,
                         PageRequest.of(0, 1000, Sort.Direction.ASC, "price"),
                         VehicleStatus.AVAILABLE)
-                .stream().map(Vehicle::getId).toList()
+                .stream().map(Vehicle::getId).collect(Collectors.toList())
         );
 
     }

@@ -11,6 +11,7 @@ import org.springframework.data.domain.Sort;
 
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 public class DisplayAvailableVehiclesCommandExecutor extends CommandExecutor {
 
@@ -38,7 +39,7 @@ public class DisplayAvailableVehiclesCommandExecutor extends CommandExecutor {
         final List<Vehicle> vehicles = vehicleRentalService.getAllVehicles(branchId, startTime, endTime,
                 PageRequest.of(0, 1000, Sort.Direction.ASC, "price"), VehicleStatus.AVAILABLE);
 
-        final List<String> vehicleIds = vehicles.stream().map(Vehicle::getId).toList();
+        final List<String> vehicleIds = vehicles.stream().map(Vehicle::getId).collect(Collectors.toList());
         StringJoiner result = new StringJoiner(",");
         for (final String id : vehicleIds) result.add(id);
 

@@ -7,6 +7,7 @@ import com.pavan.vehiclerental.model.Booking;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class BookingManager implements StoreRepository<Booking, String> {
 
@@ -31,7 +32,7 @@ public class BookingManager implements StoreRepository<Booking, String> {
 
     @Override
     public List<Booking> findAll() {
-        return this.bookings.values().stream().toList();
+        return this.bookings.values().stream().collect(Collectors.toList());
     }
 
     @Override

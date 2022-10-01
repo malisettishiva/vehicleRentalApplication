@@ -9,6 +9,7 @@ import com.pavan.vehiclerental.store.SlotsManager;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.pavan.vehiclerental.constants.SlotIntervalConstants.SLOT_INTERVAL;
 
@@ -96,7 +97,7 @@ public class SlotsService {
         for (final Slot slot : filteredSlots) {
             final List<VehicleAvailability> vehiclesWithGivenStatus = slot.getVehicles().stream()
                     .filter(vehicle -> isStatusMatch(vehicle, status))
-                    .toList();
+                    .collect(Collectors.toList());
 
             if (filteredVehicles == null) {
                 filteredVehicles = new ArrayList<>(vehiclesWithGivenStatus);
